@@ -1,0 +1,68 @@
+from sklearn.metrics import make_scorer, mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PowerTransformer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils import shuffle
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import warnings
+
+warning.filterwarning('ignore')
+
+df = pd.read_csv("C:\Kaggle\Input\Advertising.csv")
+
+df.shape
+
+df.head()
+
+df.columns = df.columns.str.lower()
+
+df.isnull().sum().any()
+
+df.drop('unnamed: 0', axis = 1, inplace = True)
+
+df.info()
+
+df.describe()
+
+df.hist(figsize = (12,10), bins = 50)
+plt.show()
+
+df['newspaper'] = np.log(df['newspaper'])
+
+df.hist(figsize = (12,10), bins = 50)
+plt.show()
+
+plt.figure(figsize = (12,8))
+sns.heatmap(df.corr(),annot=True, cmap='coolwarm', linewidths=.5)
+plt.show()
+
+x = df.drop('sales', axis = 1)
+y = df.sales
+
+x, y = shuffle(x, y, random_state=42)
+
+model_sfs = RandomForestRegressor(random_state = 42)
+
+sfs = SFS(model_sfs, k_features = 'best', forward = True, floating = True, scoring = 'neg_root_mean_squared_error', cv = 5, n_jobs = 1, verbose = 2)
+
+sfs.fit(x,y)
+
+list(sfs.k_feature_names_)
+
+x = df[list(sfs.k_feature_names_)]
+y = df.sales
+
+xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size = 0.2,random_state = 42, shuffle = True)
+
+model_l = LinearRegression()
+model_r = RandomForestRegressor()
+
+model_r.fit(xtest,ytest)
